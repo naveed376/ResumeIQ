@@ -1,0 +1,7 @@
+streamlit
+langchain-core
+langchain-groq
+pypdf
+python-docx
+python-dotenv
+reportlab
