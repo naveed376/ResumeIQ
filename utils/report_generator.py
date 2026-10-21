@@ -3,6 +3,21 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 import io
+import html
+
+
+def _clean(value):
+    """Make LLM text safe for ReportLab's built-in fonts (no black squares) and XML."""
+    text = str(value)
+    replacements = {
+        "\u2010": "-", "\u2011": "-", "\u2012": "-", "\u2013": "-", "\u2014": "-", "\u2015": "-", "\u2212": "-",
+        "\u2018": "'", "\u2019": "'", "\u201c": '"', "\u201d": '"',
+        "\u2022": "-", "\u2026": "...", "\u00a0": " ", "\u202f": " ", "\u2192": "->",
+    }
+    for bad, good in replacements.items():
+        text = text.replace(bad, good)
+    text = text.encode("latin-1", "ignore").decode("latin-1")
+    return html.escape(text, quote=False)
 
 class ReportGenerator:
     """Generate professional PDF report."""
@@ -61,7 +76,7 @@ class ReportGenerator:
         
         # Summary
         summary = analysis_result.get('summary', 'No summary available')
-        story.append(Paragraph(f"<b>Summary:</b> {summary}", self.body_style))
+        story.append(Paragraph(f"<b>Summary:</b> {_clean(summary)}", self.body_style))
         story.append(Spacer(1, 12))
         
         # Missing Skills
@@ -69,7 +84,7 @@ class ReportGenerator:
         if missing:
             story.append(Paragraph("Missing Skills", self.heading_style))
             for skill in missing:
-                story.append(Paragraph(f"• {skill}", self.body_style))
+                story.append(Paragraph(f"• {_clean(skill)}", self.body_style))
             story.append(Spacer(1, 12))
         
         # Strengths
@@ -77,7 +92,7 @@ class ReportGenerator:
         if strengths:
             story.append(Paragraph("Strengths", self.heading_style))
             for strength in strengths:
-                story.append(Paragraph(f"• {strength}", self.body_style))
+                story.append(Paragraph(f"• {_clean(strength)}", self.body_style))
             story.append(Spacer(1, 12))
         
         # Recommendations
@@ -85,7 +100,7 @@ class ReportGenerator:
         if recommendations:
             story.append(Paragraph("Recommendations", self.heading_style))
             for rec in recommendations:
-                story.append(Paragraph(f"• {rec}", self.body_style))
+                story.append(Paragraph(f"• {_clean(rec)}", self.body_style))
             story.append(Spacer(1, 12))
         
         doc.build(story)
