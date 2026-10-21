@@ -25,6 +25,15 @@ def get_api_key():
         pass
     return os.getenv("GROQ_API_KEY")
 
+def get_model():
+    """Groq model name. Override with GROQ_MODEL in secrets/.env if Groq retires this one."""
+    try:
+        if "GROQ_MODEL" in st.secrets:
+            return st.secrets["GROQ_MODEL"]
+    except Exception:
+        pass
+    return os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
+
 # Page config
 st.set_page_config(
     page_title="ResumeIQ - AI Resume Analyzer",
@@ -67,6 +76,7 @@ st.markdown("""
         margin: 10px 0;
         box-shadow: 0 5px 15px rgba(102,126,234,0.3);
     }
+    .metric-card h2, .metric-card p { color: #1a1a2e !important; }
     .analysis-box {
         background: #f8f9fa;
         border-left: 4px solid #667eea;
@@ -79,6 +89,7 @@ st.markdown("""
         padding: 15px;
         border-radius: 10px;
         text-align: center;
+        color: #1a1a2e;
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         margin: 10px 0;
     }
@@ -111,8 +122,8 @@ def init_components():
         return None, None, None, None
     
     parser = ResumeParser()
-    skill_extractor = SkillExtractor(groq_api_key)
-    matcher = JobMatcher(groq_api_key)
+    skill_extractor = SkillExtractor(groq_api_key, get_model())
+    matcher = JobMatcher(groq_api_key, get_model())
     report_gen = ReportGenerator()
     
     return parser, skill_extractor, matcher, report_gen
@@ -169,9 +180,12 @@ if st.button("🎯 Analyze Match", use_container_width=True):
                     st.session_state.resume_text,
                     job_description
                 )
-                st.session_state.analysis_result = analysis
-                
-                st.success("✅ Analysis complete!")
+                if analysis.get("error"):
+                    st.session_state.analysis_result = None
+                    st.error(f"❌ AI analysis failed: {analysis['error']}")
+                else:
+                    st.session_state.analysis_result = analysis
+                    st.success("✅ Analysis complete!")
                 
             except Exception as e:
                 st.error(f"❌ Error during analysis: {str(e)}")
