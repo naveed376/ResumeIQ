@@ -6,12 +6,12 @@ from langchain_core.prompts import PromptTemplate
 class SkillExtractor:
     """Extract skills from resume text using LLM."""
     
-    def __init__(self, groq_api_key):
+    def __init__(self, groq_api_key, model="openai/gpt-oss-120b"):
         self.llm = ChatGroq(
             groq_api_key=groq_api_key,
-            model="llama-3.3-70b-versatile",  # Naya model
+            model=model,
             temperature=0.1,
-            max_tokens=2000
+            max_tokens=3000
         )
         
         self.prompt = PromptTemplate(

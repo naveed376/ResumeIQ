@@ -6,12 +6,12 @@ from langchain_core.prompts import PromptTemplate
 class JobMatcher:
     """Match resume with job description."""
     
-    def __init__(self, groq_api_key):
+    def __init__(self, groq_api_key, model="openai/gpt-oss-120b"):
         self.llm = ChatGroq(
             groq_api_key=groq_api_key,
-            model="llama-3.3-70b-versatile",  # Naya model
+            model=model,
             temperature=0.2,
-            max_tokens=3000
+            max_tokens=4000
         )
         
         self.prompt = PromptTemplate(
@@ -68,7 +68,8 @@ Return in JSON format:
             
         except Exception as e:
             return {
-                "match_score": 50,
+                "error": str(e),
+                "match_score": 0,
                 "missing_skills": [],
                 "strengths": [],
                 "weaknesses": [],
